@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>박진우보청기 스마트 상담 시스템</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #003366; --dark: #0f172a; --blue: #38bdf8; --accent: #f43f5e; }
+        body { font-family: 'Pretendard', sans-serif; background: #f8fafc; padding: 20px; color: #334155; }
+        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: var(--primary); font-size: 2rem; margin-bottom: 30px; border-bottom: 3px solid var(--primary); padding-bottom: 10px; }
+        .section { margin-bottom: 50px; }
+        h2 { font-size: 1.3rem; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 12px; margin-bottom: 20px; }
+
+        /* 미디어 레이아웃 및 모달 트리거 */
+        .media-box { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; margin-top: 10px; background: #000; cursor: zoom-in; }
+        .media-box img, .media-box video { width: 100%; display: block; }
+
+        /* 청력도 차트 영역 */
+        .chart-container { height: 400px; margin: 20px 0; background: #fff; border-radius: 16px; padding: 15px; border: 1px solid #e2e8f0; }
+        .btn-group { text-align: center; margin-bottom: 15px; }
+        .btn { padding: 10px 25px; border: 2px solid #ddd; background: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn.active-r { border-color: #d93025; color: #d93025; background: #fff5f5; }
+        .btn.active-l { border-color: #1a73e8; color: #1a73e8; background: #f0f7ff; }
+
+        /* [복구된 핵심 영역] 시뮬레이터 디자인 */
+        .sim-container { background: var(--dark); color: white; padding: 35px; border-radius: 20px; text-align: center; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
+        .preset-btn { padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 600; }
+        .preset-btn.active { background: var(--primary); border-color: var(--blue); color: white; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+        
+        .display-area { background: rgba(0,0,0,0.5); padding: 50px 20px; border-radius: 16px; min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        #simText { font-size: 2.4rem; font-weight: 800; transition: all 0.2s ease; position: relative; letter-spacing: -0.5px; line-height: 1.2; }
+        #envStatus { font-size: 1rem; color: var(--blue); margin-top: 20px; font-weight: 500; opacity: 0.9; }
+
+        .slider-wrap { padding: 0 10px; margin-bottom: 20px; }
+        input[type=range] { width: 100%; height: 8px; border-radius: 5px; cursor: pointer; accent-color: var(--blue); }
+        canvas#waveCanvas { width: 100%; height: 60px; background: transparent; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px; }
+
+        /* 모달 스타일 */
+        #imageModal { display: none; position: fixed; z-index: 10000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); justify-content: center; align-items: center; cursor: zoom-out; }
+        #imageModal img { max-width: 95%; max-height: 95%; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>박진우보청기 스마트 상담 시스템</h1>
+
+    <div class="section">
+        <h2>1. 귀의 구조</h2>
+        <div class="media-box" onclick="openModal('ear.jpg')">
+            <img src="ear.jpg" alt="귀 구조 이미지 (ear.jpg)">
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. 소리의 전달 경로</h2>
+        <div class="media-box">
+            <video controls><source src="video.mp4" type="video/mp4"></video>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. 청력 분석 및 발음 왜곡 시뮬레이션</h2>
+        
+        <div class="btn-group">
+            <button id="btnR" class="btn active-r" onclick="setChartMode('R')">우측(○) 입력</button>
+            <button id="btnL" class="btn" onclick="setChartMode('L')">좌측(✕) 입력</button>
+        </div>
+        <div class="chart-container"><canvas id="audiogramChart"></canvas></div>
+
+        <div class="sim-container">
+            <div class="preset-grid">
+                <button class="preset-btn active" onclick="setEnv('quiet')">🏠 조용한 방</button>
+                <button class="preset-btn" onclick="setEnv('cafe')">☕ 카페 소음</button>
+                <button class="preset-btn" onclick="setEnv('street')">🚗 도로 소음</button>
+                <button class="preset-btn" onclick="setEnv('meeting')">👥 다자 회의</button>
+            </div>
+            
+            <div class="display-area">
+                <div id="simText">"아버지가 방에 들어가신다"</div>
+                <div id="envStatus">환경: 매우 선명한 대화 상황</div>
+            </div>
+
+            <div class="slider-wrap">
+                <div style="display:flex; justify-content: space-between; margin-bottom:10px;">
+                    <span style="color:#94a3b8;">어음 인지력(WRS)</span>
+                    <span style="color:var(--blue); font-weight:bold; font-size:1.4rem;"><span id="wrsVal">100</span>%</span>
+                </div>
+                <input type="range" id="wrsRange" min="0" max="100" value="100" oninput="updateSim()">
+            </div>
+            
+            <canvas id="waveCanvas"></canvas>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. 보청기 주요 형태</h2>
+        <div class="media-box" onclick="openModal('hearing_aid_styles.jpg')">
+            <img src="hearing_aid_styles.jpg" alt="보청기 형태 이미지 (hearing_aid_styles.jpg)">
+        </div>
+    </div>
+</div>
+
+<div id="imageModal" onclick="this.style.display='none'">
+    <img id="modalImg" src="">
+</div>
+
+<script>
+    // 1. 이미지 확대 모달
+    function openModal(src) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImg');
+        modalImg.src = src;
+        modal.style.display = 'flex';
+    }
+
+    // 2. 청력도 그래프 로직
+    let chartMode = 'R';
+    const ctx = document.getElementById('audiogramChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['250', '500', '1k', '2k', '4k', '8k'],
+            datasets: [
+                { label: '우측', data: [20,20,20,20,20,20], borderColor: '#d93025', backgroundColor: '#d93025', pointRadius: 8, fill: false, tension: 0 },
+                { label: '좌측', data: [30,30,30,30,30,30], borderColor: '#1a73e8', backgroundColor: '#1a73e8', pointStyle: 'crossRot', pointRadius: 10, fill: false, tension: 0 }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: { 
+                y: { reverse: true, min: -10, max: 120, ticks: { stepSize: 10 } },
+                x: { title: { display: true, text: '주파수 (Hz)' } }
+            },
+            onClick: (e) => {
+                const pos = Chart.helpers.getRelativePosition(e, chart);
+                const x = chart.scales.x.getValueForPixel(pos.x);
+                const y = Math.round(chart.scales.y.getValueForPixel(pos.y)/5)*5;
+                if(x >=0 && x <=5) { chart.data.datasets[chartMode==='R'?0:1].data[x] = y; chart.update(); }
+            }
+        }
+    });
+    function setChartMode(m) { chartMode = m; document.getElementById('btnR').className = m==='R'?'btn active-r':'btn'; document.getElementById('btnL').className = m==='L'?'btn active-l':'btn'; }
+
+    // 3. 복구된 어음 명료도 시뮬레이션 로직
+    let noise = 5;
+    const envs = { quiet: 5, cafe: 55, street: 95, meeting: 40 };
+
+    function setEnv(type) {
+        noise = envs[type];
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        updateSim();
+    }
+
+    function updateSim() {
+        const wrs = parseInt(document.getElementById('wrsRange').value);
+        document.getElementById('wrsVal').innerText = wrs;
+        const text = document.getElementById('simText');
+        const status = document.getElementById('envStatus');
+        
+        const distortionFactor = (100 - wrs) + (noise * 0.4);
+        
+        let displayText = "\"아버지가 방에 들어가신다\"";
+        let statusMsg = "환경: 매우 선명함";
+
+        if (distortionFactor < 20) {
+            displayText = "\"아버지가 방에 들어가신다\"";
+            statusMsg = "환경: 말소리가 또렷하게 들립니다.";
+            text.style.color = "#fff";
+        } else if (distortionFactor < 50) {
+            displayText = "\"아버지가 밤에 드러가신다\"";
+            statusMsg = "주의: 받침 소리가 뭉쳐 들리기 시작합니다.";
+            text.style.color = "#e2e8f0";
+        } else if (distortionFactor < 80) {
+            displayText = "\"아머미가 밤에 드러마신다\"";
+            statusMsg = "경고: 자음 변별이 안 되어 문장 파악이 어렵습니다.";
+            text.style.color = "#cbd5e1";
+        } else {
+            displayText = "\"ㅇㅂㅈㄱ ㅂㅇ ㄷㅇㄱㅅㄷ\"";
+            statusMsg = "심각: 소리만 들릴 뿐 내용을 전혀 알 수 없습니다.";
+            text.style.color = "#94a3b8";
+        }
+
+        const letterSpacing = distortionFactor / 20;
+        const blur = distortionFactor / 25;
+        const skew = distortionFactor / 15;
+        
+        text.innerText = displayText;
+        text.style.filter = `blur(${blur}px)`;
+        text.style.letterSpacing = `${letterSpacing}px`;
+        text.style.transform = `skewX(${skew}deg)`;
+        
+        if (distortionFactor > 30) {
+            text.style.textShadow = `${distortionFactor/15}px 0 rgba(244,63,94,0.6), -${distortionFactor/15}px 0 rgba(56,189,248,0.6)`;
+        } else {
+            text.style.textShadow = "none";
+        }
+        status.innerText = statusMsg;
+    }
+
+    // 파형 애니메이션
+    const canvas = document.getElementById('waveCanvas');
+    const wctx = canvas.getContext('2d');
+    let t = 0;
+    function draw() {
+        wctx.clearRect(0,0,canvas.width,canvas.height);
+        wctx.beginPath();
+        wctx.lineWidth = 2;
+        wctx.strokeStyle = `rgba(56, 189, 248, ${0.2 + noise/200})`;
+        for(let x=0; x<canvas.width; x+=5){
+            let y = 30 + Math.sin(x*0.04+t)*(noise*0.3) + (Math.random()-0.5)*(noise*0.1);
+            if(x===0) wctx.moveTo(x,y); else wctx.lineTo(x,y);
+        }
+        wctx.stroke(); t+=0.15; requestAnimationFrame(draw);
+    }
+    draw();
+    updateSim();
+</script>
+</body>
+</html>
