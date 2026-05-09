@@ -13,7 +13,7 @@
         .section { margin-bottom: 60px; }
         h2 { font-size: 1.5rem; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 15px; margin-bottom: 25px; }
 
-        /* 귀 구조 인터랙티브 */
+        /* 귀 구조 */
         .ear-simulation-container { background: #f1f5f9; padding: 30px; border-radius: 20px; margin-bottom: 20px; text-align: center; }
         .image-mapper { position: relative; width: 100%; max-width: 900px; margin: 0 auto; padding-bottom: 60%; background-image: url('ear_structure.jpg'); background-size: cover; background-position: center; border-radius: 15px; border: 2px solid #cbd5e1; }
         .hotspot { position: absolute; cursor: pointer; border-radius: 50%; background: rgba(255,255,255,0.01); transition: 0.3s; }
@@ -22,9 +22,18 @@
         #spot-middle { top: 35%; left: 40%; width: 18%; height: 30%; }
         #spot-inner { top: 28%; left: 60%; width: 20%; height: 38%; }
         #spot-nerve { top: 22%; left: 81%; width: 17%; height: 32%; }
+        .desc-panel { background: white; margin-top: 20px; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; min-height: 80px; text-align: center; }
 
-        /* 청력도 차트 전용 */
-        .chart-container { height: 700px; margin: 20px 0; background: #fff; border-radius: 20px; padding: 20px; border: 1px solid #e2e8f0; position: relative; }
+        /* 청력도 및 평균값 표시 */
+        .chart-container { height: 600px; margin: 20px 0; background: #fff; border-radius: 20px; padding: 20px; border: 1px solid #e2e8f0; position: relative; }
+        .avg-display-container { display: flex; justify-content: space-around; background: #f8fafc; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .avg-box { text-align: center; flex: 1; }
+        .avg-label { font-weight: bold; font-size: 1rem; color: #64748b; margin-bottom: 5px; }
+        .avg-value { font-size: 2rem; font-weight: 800; }
+        .avg-value.right { color: #d93025; }
+        .avg-value.left { color: #1a73e8; }
+        .unit { font-size: 1.1rem; margin-left: 5px; color: #94a3b8; }
+
         .btn-group { text-align: center; margin-bottom: 20px; }
         .btn { padding: 12px 35px; border: 2px solid #ddd; background: #fff; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.1rem; }
         .btn.active-r { border-color: #d93025; color: #d93025; background: #fff5f5; }
@@ -33,17 +42,16 @@
         /* 시뮬레이터 */
         .sim-container { background: var(--dark); color: white; padding: 40px; border-radius: 24px; text-align: center; }
         .preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 30px; }
-        .preset-btn { padding: 15px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 12px; cursor: pointer; }
+        .preset-btn { padding: 15px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; border-radius: 12px; cursor: pointer; font-weight: bold; }
         .preset-btn.active { background: var(--primary); color: white; border-color: var(--blue); }
-        .display-area { background: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; }
-        #simText { font-size: 2.2rem; font-weight: 800; line-height: 1.3; }
-        input[type=range] { width: 100%; accent-color: var(--blue); cursor: pointer; }
-        canvas#waveCanvas { width: 100%; height: 60px; background: transparent; margin-top: 20px; }
+        .display-area { background: rgba(0,0,0,0.4); padding: 40px; border-radius: 20px; min-height: 160px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        #simText { font-size: 2.2rem; font-weight: 800; line-height: 1.3; transition: 0.3s; }
+        #envStatus { font-size: 1.2rem; font-weight: 600; color: var(--blue); margin-top: 15px; }
+        input[type=range] { width: 100%; accent-color: var(--blue); cursor: pointer; margin-top: 10px; }
 
         .media-box { width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; background: #000; cursor: zoom-in; }
         .media-box img, .media-box video { width: 100%; display: block; }
         #imageModal { display: none; position: fixed; z-index: 10000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
-        #imageModal img { max-width: 90%; max-height: 90%; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -78,27 +86,38 @@
             <button id="btnR" class="btn active-r" onclick="setChartMode('R')">우측(○) 입력</button>
             <button id="btnL" class="btn" onclick="setChartMode('L')">좌측(✕) 입력</button>
         </div>
+        
         <div class="chart-container">
             <canvas id="audiogramChart"></canvas>
         </div>
 
+        <div class="avg-display-container">
+            <div class="avg-box">
+                <div class="avg-label">우측(R) 평균 (6분법)</div>
+                <div id="avgR" class="avg-value right">20.0<span class="unit">dB</span></div>
+            </div>
+            <div class="avg-box" style="border-left: 1px solid #e2e8f0;">
+                <div class="avg-label">좌측(L) 평균 (6분법)</div>
+                <div id="avgL" class="avg-value left">30.0<span class="unit">dB</span></div>
+            </div>
+        </div>
+
         <div class="sim-container">
             <div class="preset-grid">
-                <button class="preset-btn active" onclick="setEnv('quiet')">🏠 조용한 방</button>
-                <button class="preset-btn" onclick="setEnv('cafe')">☕ 카페 소음</button>
-                <button class="preset-btn" onclick="setEnv('street')">🚗 도로 소음</button>
-                <button class="preset-btn" onclick="setEnv('meeting')">👥 다자 회의</button>
+                <button id="env-quiet" class="preset-btn active" onclick="setEnv('quiet')">🏠 조용한 방</button>
+                <button id="env-cafe" class="preset-btn" onclick="setEnv('cafe')">☕ 카페 소음</button>
+                <button id="env-street" class="preset-btn" onclick="setEnv('street')">🚗 도로 소음</button>
+                <button id="env-meeting" class="preset-btn" onclick="setEnv('meeting')">👥 다자 회의</button>
             </div>
             <div class="display-area">
                 <div id="simText">"아버지가 방에 들어가신다"</div>
-                <div id="envStatus" style="color:var(--blue); margin-top:10px;">환경: 매우 선명함</div>
+                <div id="envStatus">환경: 매우 선명하게 들리는 상태입니다.</div>
             </div>
-            <div style="display:flex; justify-content: space-between; margin-bottom:10px;">
-                <span style="color:#94a3b8;">어음 인지력(WRS)</span>
-                <span style="color:var(--blue); font-weight:bold;"><span id="wrsVal">100</span>%</span>
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:10px;">
+                <span style="color:#94a3b8; font-weight:bold;">어음 인지력 (WRS) 점수 설정</span>
+                <span style="color:var(--blue); font-weight:bold; font-size:1.5rem;"><span id="wrsVal">100</span>%</span>
             </div>
             <input type="range" id="wrsRange" min="0" max="100" value="100" oninput="updateSim()">
-            <canvas id="waveCanvas"></canvas>
         </div>
     </div>
 
@@ -110,10 +129,10 @@
     </div>
 </div>
 
-<div id="imageModal" onclick="this.style.display='none'"><img id="modalImg"></div>
+<div id="imageModal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>
 
 <script>
-    // 귀 구조 데이터
+    // 1. 귀 구조 인터랙티브
     const pathData = {
         outer: { title: "외이 (Outer Ear)", desc: "소리를 모아 외이도를 통해 전달합니다." },
         middle: { title: "중이 (Middle Ear)", desc: "고막과 이소골이 진동을 증폭합니다." },
@@ -128,7 +147,7 @@
     }
     function openModal(src) { document.getElementById('modalImg').src = src; document.getElementById('imageModal').style.display = 'flex'; }
 
-    // [중요 수정] 청력도 채도 배경 정렬 로직
+    // 2. 청력도 구현 및 6분법 계산 로직
     let chartMode = 'R';
     const ctx = document.getElementById('audiogramChart').getContext('2d');
 
@@ -144,21 +163,14 @@
                 {min: 70, max: 90, label: "고도 (Severe)", color: "#94a3b8"},
                 {min: 90, max: 120, label: "심도 (Profound)", color: "#64748b"}
             ];
-
             ctx.save();
             levels.forEach(lvl => {
-                // Y축 픽셀 좌표를 정확히 계산하여 라인과 일치시킴
                 const startY = y.getPixelForValue(lvl.min);
                 const endY = y.getPixelForValue(lvl.max);
-                
-                // 배경 채도 칠하기
                 ctx.fillStyle = lvl.color;
                 ctx.fillRect(left, startY, width, endY - startY);
-
-                // 라벨 텍스트
                 ctx.fillStyle = lvl.max > 70 ? "#ffffff" : "#64748b";
                 ctx.font = "bold 14px Pretendard";
-                ctx.textAlign = "left";
                 ctx.fillText(lvl.label, left + 10, endY - 10);
             });
             ctx.restore();
@@ -191,43 +203,84 @@
                 const pos = Chart.helpers.getRelativePosition(e, chart);
                 const x = chart.scales.x.getValueForPixel(pos.x);
                 const y = Math.round(chart.scales.y.getValueForPixel(pos.y)/5)*5;
-                if(x >=0 && x <=5) { chart.data.datasets[chartMode==='R'?0:1].data[x] = y; chart.update(); }
+                if(x >=0 && x <=5) { 
+                    chart.data.datasets[chartMode==='R'?0:1].data[x] = y; 
+                    chart.update(); 
+                    calculateAverage(); // 수치 변경 시 평균 재계산
+                }
             }
         }
     });
 
-    function setChartMode(m) { chartMode = m; document.getElementById('btnR').className = m==='R'?'btn active-r':'btn'; document.getElementById('btnL').className = m==='L'?'btn active-l':'btn'; }
+    // 6분법 평균 계산 함수: (500 + 1k*2 + 2k*2 + 4k) / 6
+    function calculateAverage() {
+        const dataR = chart.data.datasets[0].data; // 우측 데이터
+        const dataL = chart.data.datasets[1].data; // 좌측 데이터
 
-    // 시뮬레이터 로직 유지
-    let noise = 5;
-    const envs = { quiet: 5, cafe: 55, street: 95, meeting: 40 };
-    function setEnv(type) { noise = envs[type]; document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active')); event.currentTarget.classList.add('active'); updateSim(); }
+        // 인덱스: 500Hz=1, 1k=2, 2k=3, 4k=4
+        const avgR = (dataR[1] + (dataR[2] * 2) + (dataR[3] * 2) + dataR[4]) / 6;
+        const avgL = (dataL[1] + (dataL[2] * 2) + (dataL[3] * 2) + dataL[4]) / 6;
+
+        document.getElementById('avgR').innerHTML = `${avgR.toFixed(1)}<span class="unit">dB</span>`;
+        document.getElementById('avgL').innerHTML = `${avgL.toFixed(1)}<span class="unit">dB</span>`;
+    }
+
+    function setChartMode(m) { 
+        chartMode = m; 
+        document.getElementById('btnR').className = m==='R'?'btn active-r':'btn'; 
+        document.getElementById('btnL').className = m==='L'?'btn active-l':'btn'; 
+    }
+
+    // 3. 발음 왜곡 시뮬레이터 로직
+    let currentEnv = 'quiet';
+    const envConfig = {
+        quiet: { noise: 0, name: "조용한 실내", desc: "주변이 조용하여 작은 소리도 비교적 잘 들립니다." },
+        cafe: { noise: 30, name: "소란스러운 카페", desc: "주변 웅성거리는 소음으로 인해 말소리가 묻힙니다." },
+        street: { noise: 60, name: "시끄러운 도로변", desc: "차 소리와 소음 때문에 대화가 매우 어렵습니다." },
+        meeting: { noise: 40, name: "여러 명과의 회의", desc: "다수가 동시에 말할 때 특정 목소리를 구분하기 힘듭니다." }
+    };
+
+    function setEnv(type) {
+        currentEnv = type;
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`env-${type}`).classList.add('active');
+        updateSim();
+    }
+
     function updateSim() {
         const wrs = parseInt(document.getElementById('wrsRange').value);
         document.getElementById('wrsVal').innerText = wrs;
+        const env = envConfig[currentEnv];
         const text = document.getElementById('simText');
-        const distortion = (100 - wrs) + (noise * 0.4);
-        if (distortion < 20) text.innerText = "\"아버지가 방에 들어가신다\"";
-        else if (distortion < 55) text.innerText = "\"아버지가 밤에 드러가신다\"";
-        else if (distortion < 85) text.innerText = "\"아머미가 밤에 드러마신다\"";
-        else text.innerText = "\"ㅇㅂㅈㄱ ㅂㅇ ㄷㅇㄱㅅㄷ\"";
+        const status = document.getElementById('envStatus');
+        const effectiveScore = wrs - (env.noise * 0.5); 
+        
+        if (effectiveScore > 85) {
+            status.innerText = `환경: ${env.name} - 매우 선명한 상태입니다.`;
+            text.innerText = "\"아버지가 방에 들어가신다\"";
+            text.style.color = "#ffffff";
+        } else if (effectiveScore > 65) {
+            status.innerText = `환경: ${env.name} - 약간의 집중이 필요합니다.`;
+            text.innerText = "\"아버지가 밤에 드러가신다\"";
+            text.style.color = "#e2e8f0";
+        } else if (effectiveScore > 40) {
+            status.innerText = `환경: ${env.name} - 단어 구분이 어렵고 대화가 끊깁니다.`;
+            text.innerText = "\"아머미가 밤에 드러마신다\"";
+            text.style.color = "#cbd5e1";
+        } else {
+            status.innerText = `환경: ${env.name} - 소리는 들리나 인지가 불가능합니다.`;
+            text.innerText = "\"ㅇㅂㅈㄱ ㅂㅇ ㄷㅇㄱㅅㄷ\"";
+            text.style.color = "#94a3b8";
+        }
+
+        const distortion = (100 - effectiveScore);
         text.style.filter = `blur(${distortion/25}px)`;
         text.style.transform = `skewX(${distortion/15}deg)`;
     }
 
-    const canvas = document.getElementById('waveCanvas');
-    const wctx = canvas.getContext('2d');
-    let t = 0;
-    function draw() {
-        wctx.clearRect(0,0,canvas.width,canvas.height);
-        wctx.beginPath(); wctx.strokeStyle = `rgba(56, 189, 248, ${0.2 + noise/200})`;
-        for(let x=0; x<canvas.width; x+=5){
-            let y = 30 + Math.sin(x*0.04+t)*(noise*0.3);
-            if(x===0) wctx.moveTo(x,y); else wctx.lineTo(x,y);
-        }
-        wctx.stroke(); t+=0.15; requestAnimationFrame(draw);
-    }
-    draw(); updateSim();
+    // 초기 실행
+    calculateAverage();
+    updateSim();
 </script>
 </body>
 </html>
