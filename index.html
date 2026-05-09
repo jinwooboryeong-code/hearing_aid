@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>박진우보청기 청각전문그룹 스마트 상담 시스템</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <style>
         :root { --primary: #003366; --dark: #0f172a; --blue: #38bdf8; --accent: #f43f5e; }
-        body { font-family: 'Pretendard', sans-serif; background: #f8fafc; padding: 20px; color: #334155; }
+        
+        /* 슬라이드 형식에 맞춰 body 스크롤 제한 및 여백 조정 */
+        body { font-family: 'Pretendard', sans-serif; background: #f8fafc; color: #334155; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+        
+        /* Swiper 설정 */
+        .swiper { width: 100vw; height: 100vh; }
+        .swiper-slide { padding: 40px 20px; box-sizing: border-box; overflow-y: auto; }
+        .swiper-button-next, .swiper-button-prev { color: var(--primary); }
+        .swiper-pagination-bullet-active { background: var(--primary); }
+
         .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
         h1 { text-align: center; color: var(--primary); font-size: 2.2rem; margin-bottom: 30px; border-bottom: 4px solid var(--primary); padding-bottom: 15px; }
         .section { margin-bottom: 60px; }
@@ -24,8 +35,10 @@
         #spot-nerve { top: 22%; left: 81%; width: 17%; height: 32%; }
         .desc-panel { background: white; margin-top: 20px; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0; min-height: 80px; text-align: center; }
 
-        /* 청력도 및 평균값 표시 */
-        .chart-container { height: 600px; margin: 20px 0; background: #fff; border-radius: 20px; padding: 20px; border: 1px solid #e2e8f0; position: relative; }
+        /* 청력도 및 평균값 표시 - 가로 스크롤 허용으로 우측 텍스트 공간 확보 */
+        .chart-container { height: 600px; margin: 20px 0; background: #fff; border-radius: 20px; padding: 20px; border: 1px solid #e2e8f0; position: relative; overflow-x: auto; }
+        .chart-inner { min-width: 850px; height: 100%; position: relative; }
+
         .avg-display-container { display: flex; justify-content: space-around; background: #f8fafc; padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .avg-box { text-align: center; flex: 1; }
         .avg-label { font-weight: bold; font-size: 1rem; color: #64748b; margin-bottom: 5px; }
@@ -49,89 +62,149 @@
         #envStatus { font-size: 1.2rem; font-weight: 600; color: var(--blue); margin-top: 15px; }
         input[type=range] { width: 100%; accent-color: var(--blue); cursor: pointer; margin-top: 10px; }
 
-        .media-box { width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; background: #000; cursor: zoom-in; }
-        .media-box img, .media-box video { width: 100%; display: block; }
+        .media-box { width: 100%; border-radius: 20px; overflow: hidden; border: 1px solid #e2e8f0; background: #000; cursor: zoom-in; text-align: center; }
+        .media-box img, .media-box video { width: 100%; display: block; margin: 0 auto; }
         #imageModal { display: none; position: fixed; z-index: 10000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>박진우보청기 청각전문그룹 스마트 상담 시스템</h1>
+<div class="swiper mySwiper">
+    <div class="swiper-wrapper">
 
-    <div class="section">
-        <h2>1. 귀의 구조와 소리 전달 경로</h2>
-        <div class="ear-simulation-container">
-            <div class="image-mapper">
-                <div class="hotspot" id="spot-outer" onclick="showPath('outer')"></div>
-                <div class="hotspot" id="spot-middle" onclick="showPath('middle')"></div>
-                <div class="hotspot" id="spot-inner" onclick="showPath('inner')"></div>
-                <div class="hotspot" id="spot-nerve" onclick="showPath('nerve')"></div>
-            </div>
-            <div class="desc-panel" id="desc-panel">
-                <h3>소리 전달의 이해</h3>
-                <p>각 부위를 클릭하여 소리가 전달되는 원리를 확인해보세요.</p>
+        <div class="swiper-slide">
+            <div class="container">
+                <h1>박진우보청기 청각전문그룹 스마트 상담 시스템</h1>
+                <div class="section">
+                    <h2>1. 귀의 구조와 소리 전달 경로</h2>
+                    <div class="ear-simulation-container">
+                        <div class="image-mapper">
+                            <div class="hotspot" id="spot-outer" onclick="showPath('outer')"></div>
+                            <div class="hotspot" id="spot-middle" onclick="showPath('middle')"></div>
+                            <div class="hotspot" id="spot-inner" onclick="showPath('inner')"></div>
+                            <div class="hotspot" id="spot-nerve" onclick="showPath('nerve')"></div>
+                        </div>
+                        <div class="desc-panel" id="desc-panel">
+                            <h3>소리 전달의 이해</h3>
+                            <p>각 부위를 클릭하여 소리가 전달되는 원리를 확인해보세요.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div class="swiper-slide">
+            <div class="container">
+                <h1>박진우보청기 청각전문그룹 스마트 상담 시스템</h1>
+                <div class="section">
+                    <h2>2. 소리 전달 시뮬레이션 영상</h2>
+                    <div class="media-box"><video controls><source src="video.mp4" type="video/mp4"></video></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="swiper-slide">
+            <div class="container">
+                <h1>박진우보청기 청각전문그룹 스마트 상담 시스템</h1>
+                <div class="section">
+                    <h2>3. 난청의 유형 (클릭하여 이미지 넘기기)</h2>
+                    <div class="media-box" style="background:#fff; border:none; cursor:pointer;" onclick="nextHlType()">
+                        <img id="hlTypeImg" src="1.jpg" style="max-width:100%; border-radius:15px; border: 1px solid #e2e8f0;" alt="난청의 유형">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="swiper-slide">
+            <div class="container">
+                <h1>박진우보청기 청각전문그룹 스마트 상담 시스템</h1>
+                <div class="section">
+                    <h2>4. 청력 분석 및 발음 왜곡 시뮬레이션</h2>
+                    <div class="btn-group">
+                        <button id="btnR" class="btn active-r" onclick="setChartMode('R')">우측(○) 입력</button>
+                        <button id="btnL" class="btn" onclick="setChartMode('L')">좌측(✕) 입력</button>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-inner">
+                            <canvas id="audiogramChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="avg-display-container">
+                        <div class="avg-box">
+                            <div class="avg-label">우측(R) 평균 (6분법)</div>
+                            <div id="avgR" class="avg-value right">20.0<span class="unit">dB</span></div>
+                        </div>
+                        <div class="avg-box" style="border-left: 1px solid #e2e8f0;">
+                            <div class="avg-label">좌측(L) 평균 (6분법)</div>
+                            <div id="avgL" class="avg-value left">30.0<span class="unit">dB</span></div>
+                        </div>
+                    </div>
+
+                    <div class="sim-container">
+                        <div class="preset-grid">
+                            <button id="env-quiet" class="preset-btn active" onclick="setEnv('quiet')">🏠 조용한 방</button>
+                            <button id="env-cafe" class="preset-btn" onclick="setEnv('cafe')">☕ 카페 소음</button>
+                            <button id="env-street" class="preset-btn" onclick="setEnv('street')">🚗 도로 소음</button>
+                            <button id="env-meeting" class="preset-btn" onclick="setEnv('meeting')">👥 다자 회의</button>
+                        </div>
+                        <div class="display-area">
+                            <div id="simText">"아버지가 방에 들어가신다"</div>
+                            <div id="envStatus">환경: 매우 선명하게 들리는 상태입니다.</div>
+                        </div>
+                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:10px;">
+                            <span style="color:#94a3b8; font-weight:bold;">어음 인지력 (WRS) 점수 설정</span>
+                            <span style="color:var(--blue); font-weight:bold; font-size:1.5rem;"><span id="wrsVal">100</span>%</span>
+                        </div>
+                        <input type="range" id="wrsRange" min="0" max="100" value="100" oninput="updateSim()">
+                        
+                        <div style="margin-top: 30px;">
+                            <img src="스크린샷_9-5-2026_9335_.jpeg" style="width: 100%; max-width: 800px; border-radius: 10px;" alt="어음 명료도 이미지">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="swiper-slide">
+            <div class="container">
+                <h1>박진우보청기 청각전문그룹 스마트 상담 시스템</h1>
+                <div class="section">
+                    <h2>5. 보청기 형태 안내</h2>
+                    <div class="media-box" onclick="openModal('hearing_aid_styles.jpg')">
+                        <img src="hearing_aid_styles.jpg">
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-
-    <div class="section">
-        <h2>2. 소리 전달 시뮬레이션 영상</h2>
-        <div class="media-box"><video controls><source src="video.mp4" type="video/mp4"></video></div>
-    </div>
-
-    <div class="section">
-        <h2>3. 청력 분석 및 발음 왜곡 시뮬레이션</h2>
-        <div class="btn-group">
-            <button id="btnR" class="btn active-r" onclick="setChartMode('R')">우측(○) 입력</button>
-            <button id="btnL" class="btn" onclick="setChartMode('L')">좌측(✕) 입력</button>
-        </div>
-        
-        <div class="chart-container">
-            <canvas id="audiogramChart"></canvas>
-        </div>
-
-        <div class="avg-display-container">
-            <div class="avg-box">
-                <div class="avg-label">우측(R) 평균 (6분법)</div>
-                <div id="avgR" class="avg-value right">20.0<span class="unit">dB</span></div>
-            </div>
-            <div class="avg-box" style="border-left: 1px solid #e2e8f0;">
-                <div class="avg-label">좌측(L) 평균 (6분법)</div>
-                <div id="avgL" class="avg-value left">30.0<span class="unit">dB</span></div>
-            </div>
-        </div>
-
-        <div class="sim-container">
-            <div class="preset-grid">
-                <button id="env-quiet" class="preset-btn active" onclick="setEnv('quiet')">🏠 조용한 방</button>
-                <button id="env-cafe" class="preset-btn" onclick="setEnv('cafe')">☕ 카페 소음</button>
-                <button id="env-street" class="preset-btn" onclick="setEnv('street')">🚗 도로 소음</button>
-                <button id="env-meeting" class="preset-btn" onclick="setEnv('meeting')">👥 다자 회의</button>
-            </div>
-            <div class="display-area">
-                <div id="simText">"아버지가 방에 들어가신다"</div>
-                <div id="envStatus">환경: 매우 선명하게 들리는 상태입니다.</div>
-            </div>
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom:10px;">
-                <span style="color:#94a3b8; font-weight:bold;">어음 인지력 (WRS) 점수 설정</span>
-                <span style="color:var(--blue); font-weight:bold; font-size:1.5rem;"><span id="wrsVal">100</span>%</span>
-            </div>
-            <input type="range" id="wrsRange" min="0" max="100" value="100" oninput="updateSim()">
-        </div>
-    </div>
-
-    <div class="section">
-        <h2>4. 보청기 형태 안내</h2>
-        <div class="media-box" onclick="openModal('hearing_aid_styles.jpg')">
-            <img src="hearing_aid_styles.jpg">
-        </div>
-    </div>
+    
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-pagination"></div>
 </div>
 
 <div id="imageModal" onclick="this.style.display='none'"><img id="modalImg" src=""></div>
 
 <script>
+    // Swiper 초기화
+    const swiper = new Swiper('.mySwiper', {
+        navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+        pagination: { el: '.swiper-pagination', clickable: true },
+        allowTouchMove: false
+    });
+
+    // 난청 유형 이미지 클릭 이벤트
+    const hlImages = ['1.jpg', '3.jpg', '4.jpg', '5.jpg'];
+    let hlIndex = 0;
+    function nextHlType() {
+        hlIndex++;
+        if(hlIndex >= hlImages.length) hlIndex = 0;
+        document.getElementById('hlTypeImg').src = hlImages[hlIndex];
+    }
+
     // 1. 귀 구조 인터랙티브
     const pathData = {
         outer: { title: "외이 (Outer Ear)", desc: "소리를 모아 외이도를 통해 전달합니다." },
@@ -151,28 +224,43 @@
     let chartMode = 'R';
     const ctx = document.getElementById('audiogramChart').getContext('2d');
 
+    // 요청하신 우측 텍스트 표기 방식의 커스텀 배경 플러그인 (기존 구조 호환)
     const audiogramBackground = {
         id: 'audiogramBackground',
         beforeDraw: (chart) => {
-            const {ctx, chartArea: {top, bottom, left, right, width}, scales: {y}} = chart;
-            const levels = [
-                {min: -10, max: 20, label: "정상 (Normal)", color: "#f8fafc"},
-                {min: 20, max: 40, label: "경도 (Mild)", color: "#f1f5f9"},
-                {min: 40, max: 55, label: "중도 (Moderate)", color: "#e2e8f0"},
-                {min: 55, max: 70, label: "중고도 (Mod-Severe)", color: "#cbd5e1"},
-                {min: 70, max: 90, label: "고도 (Severe)", color: "#94a3b8"},
-                {min: 90, max: 120, label: "심도 (Profound)", color: "#64748b"}
+            const {ctx, chartArea: {top, bottom, left, right}, scales: {y}} = chart;
+            const zones = [
+                {m: -10, x: 20, c: "#f4f9ff", t1: "정상 청력", t2: "(-10~20dB)", d: ["듣는데 어려움 없음"]},
+                {m: 20, x: 40, c: "#dcedfc", t1: "경도 난청", t2: "(20~40dB)", d: ["작은 소리 듣기 어려움", "소음이 있을 때 듣기 까다로움"]},
+                {m: 40, x: 70, c: "#b0d4f5", t1: "중도 난청", t2: "(40~70dB)", d: ["일상적인 대화 어려움", "TV 시청 시 소리를 크게 키움", "다수와 대화 시, 이해가 어려움"]},
+                {m: 70, x: 90, c: "#87bded", t1: "고도 난청", t2: "(70~90dB)", d: ["큰 소리로 대화해도 듣기 어려움", "보청기 등 청각 보조 장치 필수"]},
+                {m: 90, x: 120, c: "#60a8e6", t1: "심도 난청", t2: "(90dB~)", d: ["큰 소리도 겨우 들을 수 있음", "보청기 효과가 제한적일 수 있음"]}
             ];
             ctx.save();
-            levels.forEach(lvl => {
-                const startY = y.getPixelForValue(lvl.min);
-                const endY = y.getPixelForValue(lvl.max);
-                ctx.fillStyle = lvl.color;
-                ctx.fillRect(left, startY, width, endY - startY);
-                ctx.fillStyle = lvl.max > 70 ? "#ffffff" : "#64748b";
-                ctx.font = "bold 14px Pretendard";
-                ctx.fillText(lvl.label, left + 10, endY - 10);
+            zones.forEach(z => {
+                let sy = y.getPixelForValue(z.m);
+                let ey = y.getPixelForValue(z.x);
+                ctx.fillStyle = z.c;
+                ctx.fillRect(left, sy, right - left + 360, ey - sy);
+
+                ctx.beginPath(); ctx.moveTo(left, ey); ctx.lineTo(right + 360, ey);
+                ctx.strokeStyle = "rgba(255,255,255,0.6)"; ctx.lineWidth = 1; ctx.stroke();
+
+                ctx.fillStyle = "#334155"; ctx.textBaseline = "middle";
+                const cy = (sy + ey) / 2; const tx = right + 20; const dx = right + 120; 
+
+                ctx.font = "bold 15px Pretendard"; ctx.fillText(z.t1, tx, cy - 10);
+                ctx.font = "14px Pretendard"; ctx.fillText(z.t2, tx, cy + 10);
+
+                ctx.font = "14px Pretendard"; const lh = 22; 
+                const startY = cy - ((z.d.length - 1) * lh) / 2;
+                z.d.forEach((line, i) => { ctx.fillText(line, dx, startY + (i * lh)); });
             });
+
+            ctx.fillStyle = "#64748b"; ctx.font = "bold 13px Pretendard"; ctx.textAlign = "center";
+            ctx.fillText("낮은소리 ◀──────── 소리의 높낮이(Hz) ────────▶ 높은소리", left + (right - left) / 2, top - 35);
+            ctx.save(); ctx.translate(left - 45, top + (bottom - top) / 2); ctx.rotate(-Math.PI / 2);
+            ctx.fillText("작은소리 ◀──────── 소리의 세기(dB) ────────▶ 큰소리", 0, 0); ctx.restore();
             ctx.restore();
         }
     };
@@ -194,9 +282,10 @@
         },
         options: {
             maintainAspectRatio: false,
+            layout: { padding: { left: 60, right: 380, top: 60, bottom: 20 } },
             scales: {
                 y: { reverse: true, min: -10, max: 120, ticks: { stepSize: 10, font: {weight: 'bold'} }, grid: { color: 'rgba(0,0,0,0.05)' } },
-                x: { ticks: { font: {weight: 'bold'} }, grid: { color: 'rgba(0,0,0,0.05)' } }
+                x: { position: 'top', ticks: { font: {weight: 'bold'} }, grid: { color: 'rgba(0,0,0,0.05)' } }
             },
             plugins: { legend: { labels: { filter: (item) => item.text !== 'Speech Banana' } } },
             onClick: (e) => {
@@ -206,7 +295,7 @@
                 if(x >=0 && x <=5) { 
                     chart.data.datasets[chartMode==='R'?0:1].data[x] = y; 
                     chart.update(); 
-                    calculateAverage(); // 수치 변경 시 평균 재계산
+                    calculateAverage(); 
                 }
             }
         }
